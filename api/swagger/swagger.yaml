@@ -1,0 +1,360 @@
+swagger: "2.0"
+info:
+  version: "1.0"
+  title: Thoughtlog REST api documentation
+# during dev, should point to your local machine
+host: localhost:10010
+# basePath prefixes all resource paths
+basePath: /
+# tagss
+tags:
+- name: User
+  description: "User Authentication Management"
+- name: Thoughts
+  description: "Thoughts related endpoints"
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: Every request should include api_key in header.
+paths:
+  /users/signup:
+    x-swagger-router-controller: users_controller
+    post:
+      tags:
+        - User
+      summary: Allows a user to signup to Thoughtlog
+      operationId: signup
+      # movie info to be stored
+      parameters:
+        - in: body
+          name: body
+          description: User Signup
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/UserCreateResponse"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /users/profile:
+    x-swagger-router-controller: users_controller
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - User
+      summary: API for fetching a users profile
+      operationId: profile
+      parameters:
+        - $ref: '#/parameters/AuthorizationHeader'
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/UserProfileResponse"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /users/signin:
+    x-swagger-router-controller: users_controller
+    post:
+      tags:
+        - User
+      summary: Allows a user to signin to Thoughtlog
+      operationId: signin
+      parameters:
+        - in: body
+          name: body
+          description: User Signin
+          required: true
+          schema:
+            $ref: "#/definitions/UserSignin"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/UserProfileResponse"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /users/logout:
+    x-swagger-router-controller: users_controller
+    delete:
+      security:
+        - Bearer: []
+      tags:
+        - User
+      summary: Logsout a user on a specific device
+      operationId: logout
+      parameters:
+        - $ref: '#/parameters/AuthorizationHeader'
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /thoughts:
+    x-swagger-router-controller: thoughts_controller
+    get:
+      tags:
+        - Thoughts
+      summary: API for fetching all the thoughts
+      operationId: fetchAllThoughts
+      parameters:
+        - $ref: "#/parameters/Page"
+        - $ref: "#/parameters/Limit"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Thoughts"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    post:
+      tags:
+      - Thoughts
+      summary: API for creating a thought
+      operationId: createThought
+      parameters:
+        - in: body
+          name: body
+          description: Parameters needed for thought creation
+          required: true
+          schema:
+            $ref: "#/definitions/ThoughtCreateParams"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Thought"
+  /thought/{id}:
+    x-swagger-router-controller: thoughts_controller
+    get:
+      tags:
+      - Thoughts
+      summary: API for fetching a single thought
+      operationId: showThought
+      parameters:
+        - in: path
+          name: id
+          type: string
+          description: Thought Id
+          required: true
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Thought"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    delete:
+      tags:
+        - Thoughts
+      summary: For removing a thought
+      operationId: removeThought
+      parameters:
+        - in: path
+          name: id
+          type: string
+          description: Thought Id
+          required: true
+      responses:
+        "200":
+            description: Success
+            schema:
+              $ref: "#/definitions/Thought"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    put:
+      tags:
+        - Thoughts
+      summary: For updating a thought.
+      operationId: updateThought
+      parameters:
+        - in: path
+          name: id
+          type: string
+          description: Thought Id
+          required: true
+        - in: body
+          name: thought
+          description: Parameters needed for thought updation
+          required: true
+          schema:
+            $ref: "#/definitions/ThoughtCreateParams"
+      responses:
+        "200":
+            description: Success
+            schema:
+              $ref: "#/definitions/Thought"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/ErrorResponse"   
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+parameters:
+  AuthorizationHeader:
+    name: Authorization
+    type: string
+    in: header
+    required: false
+  Page:
+    name: page
+    description: Page number
+    type: integer
+    in: query
+    default: 1
+  Limit:
+    name: limit
+    description: No of records we want while fetch
+    type: integer
+    in: query
+    default: 10
+definitions:
+  ErrorResponse:
+    type: object
+    required:
+      - errors
+    properties:
+      status:
+        type: string
+      errors:
+        type: array
+        items:
+          type: string
+  UserCreateResponse:
+    type: object
+    required:
+        - message
+        - token
+    properties:
+      message:
+        type: string
+      token:
+        type: string
+  UserProfileResponse:
+    type: object
+    properties:
+      _id:
+        type: string
+      email:
+        type: string
+      username:
+        type: string
+  User:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+      - email
+      - password
+      - username
+  UserSignin:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+      - email
+      - password
+  ThoughtCreateParams:
+    properties:
+      description:
+        type: string
+      status:
+        type: string
+        enum: ['published', 'deleted', 'drafted']
+    required:
+      - description
+      - status
+  Thought:
+    type:
+      object
+    properties:
+      _id: 
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+      - _id
+      - description
+      - status
+      - updated_at
+  Thoughts:
+    type: object
+    properties:
+      thoughts:
+        type: array
+        items:
+          $ref: "#/definitions/Thought"
+      all_thoughts:
+        type: integer
+      total_pages:
+        type: integer
+      current_page:
+        type: integer
+      limit:
+        type: integer
+    required:
+      - thoughts
+      - all_thoughts
+      - total_pages
+      - current_page
+      - limit
+ 
