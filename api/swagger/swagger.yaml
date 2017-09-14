@@ -130,6 +130,7 @@ paths:
       parameters:
         - $ref: "#/parameters/Page"
         - $ref: "#/parameters/Limit"
+        - $ref: "#/parameters/Tags"
       responses:
         "200":
           description: Success
@@ -257,6 +258,11 @@ parameters:
     type: integer
     in: query
     default: 10
+  Tags:
+    name: tags
+    description: Query tags
+    type: string
+    in: query
 definitions:
   ErrorResponse:
     type: object
@@ -316,9 +322,19 @@ definitions:
       status:
         type: string
         enum: ['published', 'deleted', 'drafted']
+      category:
+        type: string
+        enum: ['self', 'bookmark']
+      tags:
+        type: array
+        items:
+          type: string
+      score:
+        type: number
     required:
       - description
       - status
+      - category
   Thought:
     type:
       object
@@ -327,14 +343,25 @@ definitions:
         type: string
       description:
         type: string
+      category:
+        type: string
       status:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
+      score:
         type: string
       updated_at:
         type: string
     required:
       - _id
       - description
+      - category
       - status
+      - tags
+      - score
       - updated_at
   Thoughts:
     type: object

@@ -4,11 +4,13 @@ var { Thought } = require('../models/thought_model');
 var _ = require('lodash');
 
 const createThought = (req, res, next) => {
+  // req.body.score = parseFloat(req.body.score).toFixed(1);
+  console.log('req', req.body);
   var thought = new Thought(req.body);
   thought.save()
     .then((thought_obj) => {
       // using lodash pick method to fetch only necessary fields
-      res.status(200).send(_.pick(thought_obj, ['_id', 'description', 'status', 'updated_at']));
+      res.status(200).send(_.pick(thought_obj, ['_id', 'description', 'category', 'status', 'tags', 'score', 'updated_at']));
     }).catch((err) => {
       console.log('errors', err);
       const messages = err.toString().replace('ValidationError: ', '').split(',');
@@ -19,9 +21,16 @@ const createThought = (req, res, next) => {
 const fetchAllThoughts = (req, res, next) => {
   var page = req.query.page || 1;
   var limit = +(req.query.limit) || 10;
-  Thought.paginate({}, { page: page, limit: limit })
+  var query = {};
+
+  if(typeof req.query.tags !== 'undefined') {
+    var regex = new RegExp(["^(", req.query.tags.split(',').join('|'), ")$"].join(""), "i")
+    query.tags = { $all: [regex] };
+  }
+
+  Thought.paginate(query, { page: page, limit: limit })
     .then((result) => {
-      var docs = _.map(result.docs, function(o) { return _.pick(o, ['_id', 'description', 'status', 'updated_at']); });
+      var docs = _.map(result.docs, function(o) { return _.pick(o, ['_id', 'description', 'category', 'status', 'tags', 'score', 'updated_at']); });
       res.status(200).send({thoughts: docs, all_thoughts: result.total, current_page: +(result.page), total_pages: result.pages, limit: result.limit })
     }).catch((err) => {
       res.status(400).send({ errors: err.toString().replace('MongoError: ', '').split('.')})

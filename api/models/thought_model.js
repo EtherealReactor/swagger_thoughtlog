@@ -6,6 +6,7 @@ mongoose.Promise = global.Promise;
 //  Constants and other variables.
 // ------------------------------------------------------------------------------
 const STATUS = ['published', 'deleted', 'drafted'];
+const CATEGORY = ['self', 'bookmark'];
 
 
 // ------------------------------------------------------------------------------
@@ -30,6 +31,25 @@ const thoughtSchema = new mongoose.Schema({
   updated_at: {
     type: Date,
     default: Date.now
+  },
+  category: {
+    type: String,
+    enum: CATEGORY,
+    default: 'self'
+  },
+  tags: {
+    type: Array,
+    default: []
+  },
+  score: {
+    type: mongoose.Schema.Types.Decimal,
+    default: '0.0',
+    set: function(score) {
+      return parseFloat(score).toFixed(1);
+    },
+    get: function(score) {
+      return parseFloat(score).toFixed(1);
+    }
   }
 });
 
