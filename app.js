@@ -19,13 +19,12 @@ var config = {
       if (token) {
         User.findByToken(token)
           .then((user) => {
-            console.log(user);
             if(!user) {
               var err = new Error('No User found with the given token');
               err['statusCode'] = 404;
               callback(err);
             }
-            req.swagger.params.auth_payload = user._id;
+            req.swagger.params.auth_payload = user;
             callback();
           }).catch(() => {
             var err = new Error('Failed to authenticate using bearer token');

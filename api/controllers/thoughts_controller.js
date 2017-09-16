@@ -4,13 +4,12 @@ var { Thought } = require('../models/thought_model');
 var _ = require('lodash');
 
 const createThought = (req, res, next) => {
-  // req.body.score = parseFloat(req.body.score).toFixed(1);
-  console.log('req', req.body);
+  req.body.user_id = req.swagger.params.auth_payload._id
   var thought = new Thought(req.body);
   thought.save()
     .then((thought_obj) => {
       // using lodash pick method to fetch only necessary fields
-      res.status(200).send(_.pick(thought_obj, ['_id', 'description', 'category', 'status', 'tags', 'score', 'updated_at']));
+      res.status(200).send(_.pick(thought_obj, ['_id', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']));
     }).catch((err) => {
       console.log('errors', err);
       const messages = err.toString().replace('ValidationError: ', '').split(',');
@@ -21,16 +20,30 @@ const createThought = (req, res, next) => {
 const fetchAllThoughts = (req, res, next) => {
   var page = req.query.page || 1;
   var limit = +(req.query.limit) || 10;
+  var user_id = req.query.user_id
   var query = {};
+  var user_id = req.swagger.params.auth_payload._id;
+  var tags = []
 
-  if(typeof req.query.tags !== 'undefined') {
-    var regex = new RegExp(["^(", req.query.tags.split(',').join('|'), ")$"].join(""), "i")
+  req.query.tags.split(',').forEach(function(tag) {
+    tags.push('.+' + tag);
+    tags.push(tag + '.+');
+    tags.push('.+' + tag + '.$');
+  });
+
+  if(typeof req.query.tags !== 'undefined' && user_id !== null) {
+    var regex = new RegExp(["^(", tags.join('|'), ")$"].join(""), "i")
     query.tags = { $all: [regex] };
+    query.user_id = user_id
+  }
+
+  if(user_id !== null) {
+    query.user_id = user_id
   }
 
   Thought.paginate(query, { page: page, limit: limit })
     .then((result) => {
-      var docs = _.map(result.docs, function(o) { return _.pick(o, ['_id', 'description', 'category', 'status', 'tags', 'score', 'updated_at']); });
+      var docs = _.map(result.docs, function(o) { return _.pick(o, ['_id', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']); });
       res.status(200).send({thoughts: docs, all_thoughts: result.total, current_page: +(result.page), total_pages: result.pages, limit: result.limit })
     }).catch((err) => {
       res.status(400).send({ errors: err.toString().replace('MongoError: ', '').split('.')})
@@ -42,7 +55,7 @@ const showThought = (req, res, next) => {
   Thought.find({_id: req.swagger.params.id.value})
     .then((thought) => {
       if(thought.length > 0) {
-        res.status(200).send(_.pick(thought[0], ['_id', 'description', 'status', 'updated_at']))
+        res.status(200).send(_.pick(thought[0], ['_id', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']))
       }
       res.status(404).send({ errors: ['Valid Id. But no thought found for the given Id'] })
     }).catch((err) => {

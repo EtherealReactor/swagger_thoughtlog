@@ -123,6 +123,8 @@ paths:
   /thoughts:
     x-swagger-router-controller: thoughts_controller
     get:
+      security:
+        - Bearer: []
       tags:
         - Thoughts
       summary: API for fetching all the thoughts
@@ -131,6 +133,7 @@ paths:
         - $ref: "#/parameters/Page"
         - $ref: "#/parameters/Limit"
         - $ref: "#/parameters/Tags"
+        - $ref: "#/parameters/UserId"
       responses:
         "200":
           description: Success
@@ -141,6 +144,8 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
     post:
+      security:
+        - Bearer: []
       tags:
       - Thoughts
       summary: API for creating a thought
@@ -160,6 +165,8 @@ paths:
   /thought/{id}:
     x-swagger-router-controller: thoughts_controller
     get:
+      security:
+        - Bearer: []
       tags:
       - Thoughts
       summary: API for fetching a single thought
@@ -184,6 +191,8 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
     delete:
+      security:
+        - Bearer: []
       tags:
         - Thoughts
       summary: For removing a thought
@@ -208,6 +217,8 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
     put:
+      security:
+        - Bearer: []
       tags:
         - Thoughts
       summary: For updating a thought.
@@ -261,6 +272,11 @@ parameters:
   Tags:
     name: tags
     description: Query tags
+    type: string
+    in: query
+  UserId:
+    name: user_id
+    description: Id of the user
     type: string
     in: query
 definitions:

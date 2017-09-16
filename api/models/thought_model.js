@@ -19,7 +19,7 @@ const thoughtSchema = new mongoose.Schema({
     required: [true, 'A thought should have some description.'],
     minlength: [5, 'A thought should be atleast 5 characters long']
   },
-  author: {
+  user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },

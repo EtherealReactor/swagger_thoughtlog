@@ -11,7 +11,6 @@ const signup = (req, res, next) => {
   // generateAuthToken and then save the user
   user.generateAuthToken(req)
     .then((token) => {
-      console.log('user done', token);
       res.header('token', token).status(200).send({ message: 'User created successfully', token: token })
     }).catch((err) => {
       const messages = err.toString().replace('ValidationError: ', '').split(',');
@@ -21,7 +20,7 @@ const signup = (req, res, next) => {
 
 const profile = (req, res, next) => {
   // swaggerSecurityHandlers will automatically set the user_id in params :)
-  const _id = req.swagger.params.auth_payload;
+  const _id = req.swagger.params.auth_payload._id;
 
   User.findOne({_id: _id})
     .then((user) => {
