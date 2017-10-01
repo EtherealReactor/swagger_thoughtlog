@@ -1,10 +1,11 @@
 'use strict';
 
 var { Thought } = require('../models/thought_model');
+var mongoose = require('mongoose');
 var _ = require('lodash');
 
 const createThought = (req, res, next) => {
-  req.body.user_id = req.swagger.params.auth_payload._id
+  req.body.user_id = mongoose.Types.ObjectId(req.swagger.params.auth_payload._id);
   var thought = new Thought(req.body);
   thought.save()
     .then((thought_obj) => {
@@ -20,25 +21,27 @@ const createThought = (req, res, next) => {
 const fetchAllThoughts = (req, res, next) => {
   var page = req.query.page || 1;
   var limit = +(req.query.limit) || 10;
-  var user_id = req.query.user_id
   var query = {};
-  var user_id = req.swagger.params.auth_payload._id;
-  var tags = []
+  var tags = [];
+  var user_ids = [];
 
-  req.query.tags.split(',').forEach(function(tag) {
-    tags.push('.+' + tag);
-    tags.push(tag + '.+');
-    tags.push('.+' + tag + '.$');
-  });
+  if(typeof req.query.tags !== 'undefined') {
+    req.query.tags.split(',').forEach(function(tag) {
+      tags.push(tag);
+      tags.push('.+' + tag);
+      tags.push(tag + '.+');
+      tags.push('.+' + tag + '.$');
+    });
 
-  if(typeof req.query.tags !== 'undefined' && user_id !== null) {
     var regex = new RegExp(["^(", tags.join('|'), ")$"].join(""), "i")
     query.tags = { $all: [regex] };
-    query.user_id = user_id
   }
 
-  if(user_id !== null) {
-    query.user_id = user_id
+  if(req.query.user_id !== 'undefined') {
+    req.query.user_id.split(',').forEach(function(id) {
+      user_ids.push(mongoose.Types.ObjectId(id.toString()));
+    });
+    query.user_id = { $in: user_ids }
   }
 
   Thought.paginate(query, { page: page, limit: limit })
