@@ -8,6 +8,7 @@ var app = require('express')();
 var dotenv = require('dotenv').config({ path: 'configuration.env' });
 var mongoose = require('mongoose');
 var UAParser = require('ua-parser-js');
+var cors = require("cors");
 var { User } = require('./api/models/user_model');
 
 module.exports = app; // for testing
@@ -51,6 +52,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
   });
 
   app.use(SwaggerUi(swaggerExpress.runner.swagger));
+  app.use(cors({origin:true,credentials: true}));
 
   swaggerExpress.register(app);
 
