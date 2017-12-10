@@ -36,8 +36,8 @@ const fetchAllThoughts = (req, res, next) => {
     var regex = new RegExp(["^(", tags.join('|'), ")$"].join(""), "i")
     query.tags = { $all: [regex] };
   }
-
-  if(req.query.user_id !== 'undefined') {
+  console.log('::::  ' + req.query.user_id)
+  if(typeof req.query.user_id !== 'undefined' ) {
     req.query.user_id.split(',').forEach(function(id) {
       user_ids.push(mongoose.Types.ObjectId(id.toString()));
     });
