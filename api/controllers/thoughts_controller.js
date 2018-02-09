@@ -4,19 +4,71 @@ var { Thought } = require('../models/thought_model');
 var mongoose = require('mongoose');
 var _ = require('lodash');
 
-const createThought = (req, res, next) => {
-  req.body.user_id = mongoose.Types.ObjectId(req.swagger.params.auth_payload._id);
-  var thought = new Thought(req.body);
-  thought.save()
-    .then((thought_obj) => {
-      // using lodash pick method to fetch only necessary fields
-      res.status(200).send(_.pick(thought_obj, ['_id', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']));
-    }).catch((err) => {
-      console.log('errors', err);
-      const messages = err.toString().replace('ValidationError: ', '').split(',');
-      res.status(400).send({ errors: messages });
+var aws = require('aws-sdk'),
+    multer = require('multer'),
+    fs = require('fs'),
+    multerS3 = require('multer-s3');
+
+aws.config.update({
+    secretAccessKey: process.env.S3_SECRET_ACCESSKEY,
+    accessKeyId: process.env.S3_ACCESSKEY_ID,
+    region: process.env.REGION
+});
+
+var  s3 = new aws.S3();
+
+
+const uploadFile = function (file) {
+
+  console.log('file name', file.originalname);
+
+  var params = {
+    Body: file.buffer,
+    Key: file.originalname,
+    ACL: 'public-read',
+    Bucket: 'attachments.thoughtlog.thehelmet.life'
+   };
+
+  return new Promise(function(resolve, reject) {
+    s3.upload(params, function(err, data) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data.Location);
+        }
     });
-};
+  });
+}
+
+const createThought = ((req, res, next) => {
+  req.body.user_id = mongoose.Types.ObjectId(req.swagger.params.auth_payload._id);
+  
+  let promises = [];
+  let attachments = '';
+
+  for(let file in req.files) {
+    promises.push(uploadFile(req.files[file][0]))
+  }
+  
+  Promise.all(promises)
+    .then((results) => {
+      // attachments = results
+      req.body.attachments = results
+      var thought = new Thought(req.body);
+      thought.save()
+        .then((thought_obj) => {
+          // using lodash pick method to fetch only necessary fields
+          res.status(200).send(_.pick(thought_obj, ['_id', 'description', 'user_id', 'category', 'status', 'tags', 'attachments', 'score', 'updated_at']));
+        }).catch((err) => {
+          console.log('errors', err);
+          const messages = err.toString().replace('ValidationError: ', '').split(',');
+          res.status(400).send({ errors: messages });
+        });
+    })
+    .catch((e) => {
+        res.status(400).send({ errors: e });
+    });
+});
 
 const fetchAllThoughts = (req, res, next) => {
   var page = req.query.page || 1;

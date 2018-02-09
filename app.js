@@ -42,6 +42,7 @@ var config = {
 };
 
 SwaggerExpress.create(config, function(err, swaggerExpress) {
+  // });
 
   if (err) { throw err; }
   // Mongoose connection, promises and error handling

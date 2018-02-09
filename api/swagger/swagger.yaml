@@ -155,12 +155,40 @@ paths:
       summary: API for creating a thought
       operationId: createThought
       parameters:
-        - in: body
-          name: body
-          description: Parameters needed for thought creation
+        - in: formData
+          name: description
+          type: string
+          required: false
+          description: Description of the thought.
+        - in: formData
+          name: category
+          type: string
+          required: false
+          description: Category
+        - in: formData
+          name: status
+          type: string
+          required: false
+          description: Status
+        - in: formData
+          name: tags
+          type: array
+          items:
+            type: string
+          required: false
+          description: Tags
+        - in: formData
+          name: attachment1
+          type: file
           required: true
-          schema:
-            $ref: "#/definitions/ThoughtCreateParams"
+        - in: formData
+          name: attachment2
+          type: file
+          required: false
+        - in: formData
+          name: attachment3
+          type: file
+          required: false
       responses:
         "200":
           description: Success
@@ -349,6 +377,10 @@ definitions:
         type: array
         items:
           type: string
+      attachments:
+        type: array
+        items:
+          type: string
       score:
         type: number
     required:
@@ -368,6 +400,10 @@ definitions:
       status:
         type: string
       tags:
+        type: array
+        items:
+          type: string
+      attachments:
         type: array
         items:
           type: string

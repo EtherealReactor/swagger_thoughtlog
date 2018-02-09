@@ -41,6 +41,10 @@ const thoughtSchema = new mongoose.Schema({
     type: Array,
     default: []
   },
+  attachments: {
+    type: Array,
+    default: []
+  },
   score: {
     type: mongoose.Schema.Types.Decimal,
     default: '0.0',
