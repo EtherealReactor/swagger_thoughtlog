@@ -13,8 +13,11 @@ const signup = (req, res, next) => {
     .then((token) => {
       res.header('token', token).status(200).send({ message: 'User created successfully', token: token })
     }).catch((err) => {
-      const messages = err.toString().replace('ValidationError: ', '').split(',');
-      res.status(400).send({ errors: messages });
+      let errors = {};
+      for (let key in err.errors) {
+        errors[key] = err.errors[key].message.replace('Error, ', '')
+      }
+      res.status(400).send(errors);
     });
 };
 
@@ -37,18 +40,15 @@ const signin = (req, res, next) => {
   const {email, password} = req.body;
   User.findByCredentials(email, password, req)
     .then(({user, token}) => {
-      console.log('user loggged in successfully', user);
-      console.log('platofom token', token);
       res.status(200).send({_id: user._id, email: user.email, username: user.username, token: token})
     }).catch((err) => {
-      res.status(400).send({message: [err]});
+      res.status(400).send(err);
     })
 };
 
 const logout = (req, res, next) => {
   User.logout(req.headers.authorization)
     .then((user) => {
-      console.log('user after token removal', user);
       req.swagger.params.auth_payload = null;
       res.status(200).send({message: 'User logged out successfully.'});
     }).catch((err) => {

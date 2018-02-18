@@ -56,7 +56,7 @@ paths:
         "400":
           description: Error
           schema:
-            $ref: "#/definitions/ErrorResponse"
+            $ref: "#/definitions/ErrorsSignin"
   /users/profile:
     x-swagger-router-controller: users_controller
     get:
@@ -99,7 +99,7 @@ paths:
         "400":
           description: Error
           schema:
-            $ref: "#/definitions/ErrorResponse"
+            $ref: "#/definitions/ErrorsSignin"
   /users/logout:
     x-swagger-router-controller: users_controller
     delete:
@@ -138,6 +138,7 @@ paths:
         - $ref: "#/parameters/Limit"
         - $ref: "#/parameters/Tags"
         - $ref: "#/parameters/UserId"
+        - $ref: "#/parameters/Status"
       responses:
         "200":
           description: Success
@@ -180,7 +181,7 @@ paths:
         - in: formData
           name: attachment1
           type: file
-          required: true
+          required: false
         - in: formData
           name: attachment2
           type: file
@@ -194,6 +195,24 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/Thought"
+  /thoughts/new:
+    x-swagger-router-controller: thoughts_controller
+    get:
+      security:
+        - Bearer: []
+      tags:
+      - Thoughts
+      summary: API for fetching a single thought
+      operationId: newThought
+      responses:
+        "200":
+            description: Success
+            schema:
+              $ref: "#/definitions/NewThought"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
   /thought/{id}:
     x-swagger-router-controller: thoughts_controller
     get:
@@ -264,7 +283,6 @@ paths:
         - in: body
           name: thought
           description: Parameters needed for thought updation
-          required: true
           schema:
             $ref: "#/definitions/ThoughtCreateParams"
       responses:
@@ -311,6 +329,13 @@ parameters:
     description: Id of the user
     type: string
     in: query
+  Status:
+    name: status
+    description: status of the thought
+    in: query
+    default: 'published'
+    enum: ['published', 'drafted', 'deleted']
+    type: string
 definitions:
   ErrorResponse:
     type: object
@@ -440,4 +465,16 @@ definitions:
       - total_pages
       - current_page
       - limit
+  ErrorsSignin:
+    type: object
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+  NewThought:
+    type: object
+    properties:
+      id:
+        type: string
  

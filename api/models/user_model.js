@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 var UAParser = require('ua-parser-js');
 var Utilities = require('./../helpers/utilities');
 var validator = require('validator');
+var uniqueValidator = require('mongoose-unique-validator');
 var bcrypt = require('bcryptjs');
 mongoose.Promise = global.Promise;
 
@@ -12,9 +13,9 @@ mongoose.Promise = global.Promise;
 var userSchema = new mongoose.Schema({
   email: {
     type: String,
-    required: [true, "Email is required and has to be unique"],
-    trim: true,
-    unique: true
+    index: true,
+    unique: true,
+    required: true
   },
   password: {
     type: String,
@@ -43,48 +44,48 @@ var userSchema = new mongoose.Schema({
 // ------------------------------------------------------------------------------
 //  HELPER FUNCTIONS
 // ------------------------------------------------------------------------------
-function uniqueValidator(object, model_type, field) {
-  var query = {}
-  query[field] = object[field]
+// function uniqueValidator(object, model_type, field) {
+//   var query = {}
+//   query[field] = object[field]
 
-  return mongoose.model(model_type).findOne(query)
-    .then((user) => {
-      if(user) {
-        object.invalidate(field, `${field} must be unique`);
-        err = new Error(`${field} must be unique`);
-        return Promise.reject(err);
-      }
-      return Promise.resolve();
-    }).catch((err) => {
-       return Promise.reject(err);
-    })
-}
+//   return mongoose.model(model_type).findOne(query)
+//     .then((user) => {
+//       if(user) {
+//         object.invalidate(field, `${field} must be unique`);
+//         err = new Error(`${field} must be unique`);
+//         return Promise.reject(err);
+//       }
+//       return Promise.resolve();
+//     }).catch((err) => {
+//        return Promise.reject(err);
+//     })
+// }
 
 
 // ------------------------------------------------------------------------------
 //  VALIDATIONS
 // ------------------------------------------------------------------------------
-userSchema.pre("save", true, function(next, callback) {
-  uniqueValidator(this, "User", "email")
-    .then(() => {
-      callback();
-    }).catch((err) => {
-      callback(err);
-      next()
-    });
-  next();
-});
+// userSchema.pre("save", true, function(next, callback) {
+//   uniqueValidator(this, "User", "email")
+//     .then(() => {
+//       callback();
+//     }).catch((err) => {
+//       callback(err);
+//       next()
+//     });
+//   next();
+// });
 
-userSchema.pre("save", true, function(next, callback) {
-  uniqueValidator(this, "User", "username")
-    .then(() => {
-      callback();
-    }).catch((err) => {
-      callback(err);
-      next()
-    });
-  next();
-});
+// userSchema.pre("save", true, function(next, callback) {
+//   uniqueValidator(this, "User", "username")
+//     .then(() => {
+//       callback();
+//     }).catch((err) => {
+//       callback(err);
+//       next()
+//     });
+//   next();
+// });
 
 
 // ------------------------------------------------------------------------------
@@ -147,7 +148,6 @@ userSchema.methods.generateAuthToken = function(req) {
 }
 
 userSchema.methods.createOrUpdateToken = function(req) {
-  console.log('user found');
   var user = this;
   var platform = Utilities.platform(req.headers['user-agent'])
   var query = {'api_keys.platform': platform, email: user.email}
@@ -159,7 +159,6 @@ userSchema.methods.createOrUpdateToken = function(req) {
   // return mongoose.model('User').findOneAndUpdate(query, update, {new: true}).select('api_keys')
   return mongoose.model('User').update(query, update, {new: true})
     .then((writeResult) => {
-      console.log('writeResult', writeResult);
       if (!writeResult.nModified) {
         // var nested_query = { 'api_keys.platform': { $ne: platform } };
         var nested_query = { email: user.email, 'api_keys.platform': { $ne: platform } };
@@ -217,14 +216,12 @@ userSchema.statics.findByCredentials = function(email, password, req) {
   return User.findOne({email: email})
     .then((user) => {
       if(!user) {
-        console.log('User with given email is not found');
-        return Promise.reject('User with given email is not found')
+        return Promise.reject({email: 'User with email is not found'})
       }
       return bcrypt.compare(password, user.password)
         .then((res) => {
           if(!res) {
-            console.log('Invalid password');
-            return Promise.reject('Invalid password');
+            return Promise.reject({password: 'Invalid password'});
           }
           return user.createOrUpdateToken(req)
             .then((token) => {
@@ -246,6 +243,8 @@ userSchema.statics.logout = function(token) {
     { new: true }
   )
 }
+
+userSchema.plugin(uniqueValidator);
 
 const User = mongoose.model('User', userSchema);
 
