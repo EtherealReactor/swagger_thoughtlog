@@ -108,12 +108,12 @@ const fetchAllThoughts = (req, res, next) => {
     query.user_id = { $in: user_ids }
   }
   
-  console.log('::::  ' + req.query.status)
-  if(typeof req.query.status !== undefined) {
+  console.log('::::  ' + typeof req.query.status !== undefined)
+  if(req.query.status !== undefined && req.query.status.length > 0) {
     query.status = { $eq: req.query.status }
   }
 
-  Thought.paginate(query, { page: page, limit: limit })
+  Thought.paginate(query, { page: page, limit: limit, sort: {updated_at: -1} })
     .then((result) => {
       var docs = _.map(result.docs, function(o) { return _.pick(o, ['_id', 'title', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']); });
       res.status(200).send({thoughts: docs, all_thoughts: result.total, current_page: +(result.page), total_pages: result.pages, limit: result.limit })
