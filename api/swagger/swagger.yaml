@@ -297,7 +297,94 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/ErrorResponse"   
+            $ref: "#/definitions/ErrorResponse" 
+  /attachments:
+    x-swagger-router-controller: attachments_controller
+    post:
+      consumes:
+        - multipart/form-data
+      tags:
+      - Attachments
+      summary: API for creating an attachment
+      operationId: createAttachment
+      parameters:
+        - in: formData
+          name: attachment
+          type: file
+          required: true
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Attachment"
+  /attachment/{id}:
+    x-swagger-router-controller: attachments_controller
+    parameters:
+      - in: path
+        name: id
+        type: string
+        description: Attachment Id
+        required: true
+    get:
+      tags:
+      - Attachments
+      summary: API for fetching a single attachment
+      operationId: showAttachment
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Attachment"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    delete:
+      tags:
+        - Attachments
+      summary: For marking an attachment as deleted
+      operationId: removeAttachment
+      responses:
+        "200":
+            description: Success
+            schema:
+              $ref: "#/definitions/Attachment"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    put:
+      tags:
+        - Attachments
+      summary: For updating an attachment.
+      operationId: updateAttachment
+      parameters:
+        - in: body
+          name: Status
+          description: Status
+          schema:
+            $ref: "#/definitions/AttachmentStatus"
+      responses:
+        "200":
+            description: Success
+            schema:
+              $ref: "#/definitions/Thought"
+        "400":
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/ErrorResponse" 
   /swagger:
     x-swagger-pipe: swagger_raw
 # complex objects have schema definitions
@@ -477,4 +564,27 @@ definitions:
     properties:
       id:
         type: string
+  Attachment:
+    type:
+      object
+    properties:
+      _id: 
+        type: string
+      user_id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      s3_url:
+        type: string
+      created_at:
+        type: string
+      updated_at:
+        type: string
+  AttachmentStatus:
+    properties:
+      status:
+        type: string
+        enum: ['deleted', 'drafted']
  

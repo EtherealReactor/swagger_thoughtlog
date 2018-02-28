@@ -84,7 +84,7 @@ const createThought = ((req, res, next) => {
 
 const fetchAllThoughts = (req, res, next) => {
   var page = req.query.page || 1;
-  var limit = +(req.query.limit) || 10;
+  var limit = +(req.query.limit) || 5;
   var query = {};
   var tags = [];
   var user_ids = [];
