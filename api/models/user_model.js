@@ -15,7 +15,7 @@ var userSchema = new mongoose.Schema({
     type: String,
     index: true,
     unique: true,
-    required: true
+    required: true,
   },
   password: {
     type: String,
@@ -28,64 +28,21 @@ var userSchema = new mongoose.Schema({
     minlength: [3, 'must be at least {MINLENGTH} characters long'],
     unique: true
   },
-  api_keys: [{
+  api_keys: [
+    {
+    select: false,
     platform: {
       type: String,
-      required: true
+      required: true,
+      select: false
     },
     token: {
       type: String,
-      required: true
+      required: true,
+      select: false
     }
   }]
 });
-
-
-// ------------------------------------------------------------------------------
-//  HELPER FUNCTIONS
-// ------------------------------------------------------------------------------
-// function uniqueValidator(object, model_type, field) {
-//   var query = {}
-//   query[field] = object[field]
-
-//   return mongoose.model(model_type).findOne(query)
-//     .then((user) => {
-//       if(user) {
-//         object.invalidate(field, `${field} must be unique`);
-//         err = new Error(`${field} must be unique`);
-//         return Promise.reject(err);
-//       }
-//       return Promise.resolve();
-//     }).catch((err) => {
-//        return Promise.reject(err);
-//     })
-// }
-
-
-// ------------------------------------------------------------------------------
-//  VALIDATIONS
-// ------------------------------------------------------------------------------
-// userSchema.pre("save", true, function(next, callback) {
-//   uniqueValidator(this, "User", "email")
-//     .then(() => {
-//       callback();
-//     }).catch((err) => {
-//       callback(err);
-//       next()
-//     });
-//   next();
-// });
-
-// userSchema.pre("save", true, function(next, callback) {
-//   uniqueValidator(this, "User", "username")
-//     .then(() => {
-//       callback();
-//     }).catch((err) => {
-//       callback(err);
-//       next()
-//     });
-//   next();
-// });
 
 
 // ------------------------------------------------------------------------------
@@ -104,30 +61,6 @@ userSchema.pre("save", true, function(next, callback) {
   };
   next();
 });
-
-// **** Generalised this so that we can use the same uniqueValidator
-//      function for multiple fields *******************************
-// userSchema.pre("save", true, function(next, callback) {
-//   // var self = this;
-//   // mongoose.model("User").findOne({username : this.username})
-//   //   .then((user) => {
-//   //     if(user) {
-//   //       self.invalidate("username", "username must be unique");
-//   //       callback(new Error("username must be unique"));
-//   //     }
-//   //     callback();
-//   //   }).catch((err) => {
-//   //     callback(err);
-//   //   })
-//   uniqueValidator(this, "User", "username")
-//     .then(() => {
-//       callback()
-//     }).catch((err) => {
-//       callback(err);
-//     })
-//   next();
-// });
-
 
 // ------------------------------------------------------------------------------
 //  INSTANCE METHODS

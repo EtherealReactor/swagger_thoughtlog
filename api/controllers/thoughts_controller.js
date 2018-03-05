@@ -1,6 +1,7 @@
 'use strict';
 
 var { Thought } = require('../models/thought_model');
+var { User } = require('../models/user_model')
 var mongoose = require('mongoose');
 var _ = require('lodash');
 
@@ -53,32 +54,19 @@ const newThought = ((req, res, next) => {
 });
 
 const createThought = ((req, res, next) => {
-  req.body.user_id = mongoose.Types.ObjectId(req.swagger.params.auth_payload._id);
+  req.body.user = req.swagger.params.auth_payload._id;
+  req.body.attachments = req.swagger.params.attachments.value;
+  req.body.tags = req.swagger.params.tags.value;
   
-  let promises = [];
-  let attachments = '';
-
-  for(let file in req.files) {
-    promises.push(uploadFile(req.files[file][0]))
-  }
-  
-  Promise.all(promises)
-    .then((results) => {
-      // attachments = results
-      req.body.attachments = results
-      var thought = new Thought(req.body);
-      thought.save()
-        .then((thought_obj) => {
-          // using lodash pick method to fetch only necessary fields
-          res.status(200).send(_.pick(thought_obj, ['_id', 'title', 'description', 'user_id', 'category', 'status', 'tags', 'attachments', 'score', 'updated_at']));
-        }).catch((err) => {
-          console.log('errors', err);
-          const messages = err.toString().replace('ValidationError: ', '').split(',');
-          res.status(400).send({ errors: messages });
-        });
-    })
-    .catch((e) => {
-        res.status(400).send({ errors: e });
+  var thought = new Thought(req.body);
+  thought.save()
+    .then((thought_obj) => {
+      // using lodash pick method to fetch only necessary fields
+      res.status(200).send(_.pick(thought_obj, ['_id', 'title', 'description', 'user', 'category', 'status', 'tags', 'attachments', 'score', 'updated_at']));
+    }).catch((err) => {
+      console.log('errors', err);
+      const messages = err.toString().replace('ValidationError: ', '').split(',');
+      res.status(400).send({ errors: messages });
     });
 });
 
@@ -108,14 +96,14 @@ const fetchAllThoughts = (req, res, next) => {
     query.user_id = { $in: user_ids }
   }
   
-  console.log('::::  ' + typeof req.query.status !== undefined)
   if(req.query.status !== undefined && req.query.status.length > 0) {
     query.status = { $eq: req.query.status }
   }
 
-  Thought.paginate(query, { page: page, limit: limit, sort: {updated_at: -1} })
+  Thought.paginate(query, { page: page, limit: limit, populate: ['attachments', 'user'], sort: {updated_at: -1} })
     .then((result) => {
-      var docs = _.map(result.docs, function(o) { return _.pick(o, ['_id', 'title', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']); });
+      let attachmentIds = result.docs.attachments;
+      var docs = _.map(result.docs, function(o) { return _.pick(o, ['_id', 'title', 'description', 'user', 'category', 'status', 'tags', 'attachments', 'updated_at']); });
       res.status(200).send({thoughts: docs, all_thoughts: result.total, current_page: +(result.page), total_pages: result.pages, limit: result.limit })
     }).catch((err) => {
       res.status(400).send({ errors: err.toString().replace('MongoError: ', '').split('.')})
@@ -125,9 +113,11 @@ const fetchAllThoughts = (req, res, next) => {
 const showThought = (req, res, next) => {
   var id = req.query.id
   Thought.find({_id: req.swagger.params.id.value})
+    .populate('user', ['_id', 'email', 'username'])
+    .populate('attachments')
     .then((thought) => {
       if(thought.length > 0) {
-        res.status(200).send(_.pick(thought[0], ['_id', 'title', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']))
+        res.status(200).send(_.pick(thought[0], ['_id', 'title', 'description', 'category', 'status', 'updated_at', 'user', 'attachments']))
       }
       res.status(404).send({ errors: ['Valid Id. But no thought found for the given Id'] })
     }).catch((err) => {
@@ -148,16 +138,13 @@ const removeThought = (req, res, next) => {
 }
 
 const updateThought = (req, res, next) => {
-  console.log('coming to updateThought', req.swagger.params.id.value);
   Thought.findOneAndUpdate({ _id: req.swagger.params.id.value }, req.body, { new: true, runValidators: true })
     .then((thought) => {
-      console.log('thought', thought);
       if(thought) {
         res.status(200).send(_.pick(thought, ['_id', 'title', 'description', 'user_id', 'category', 'status', 'tags', 'score', 'updated_at']))
       }
       res.status(404).send({ errors: ['No thought found for the given Id'] })
     }).catch((err) => {
-      console.log('erors=============', err);
       const messages = err.toString().replace('ValidationError: ', '').split(',');
       res.status(400).send({ errors: messages });
     });

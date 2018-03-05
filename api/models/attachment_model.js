@@ -23,7 +23,7 @@ const attachmentsSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },    
-  user_id: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },

@@ -39,8 +39,7 @@ const uploadFile = function (file) {
 const save_attachment = (attachment, res) => {
   attachment.save()
     .then((data) => {
-      console.log('attachment', data);
-      res.status(200).send(_.pick(data, ['_id', 'name', 's3_url', 'mime_type', 'status', 'created_at', 'updated_at']));
+      res.status(200).send(_.pick(data, ['_id', 'name', 's3_url', 'mime_type', 'status', 'user', 'created_at', 'updated_at']));
     })
     .catch((err) => {
       res.status(400).send({errors: err.toString().replace('MongooseError: ', '').split(',')})
@@ -48,9 +47,9 @@ const save_attachment = (attachment, res) => {
 }
 
 const createAttachment = ((req, res, next) => {
-  // req.body.user_id = mongoose.Types.ObjectId(req.swagger.params.auth_payload._id);
+  let user_id = mongoose.Types.ObjectId(req.swagger.params.auth_payload._id);
   let file = req.files['attachment'][0]  
-  let attachment = new Attachment({name: file.originalname, mime_type: file.mimetype, status: 'syncing' });
+  let attachment = new Attachment({name: file.originalname, mime_type: file.mimetype, status: 'syncing', user: user_id });
   
   uploadFile(file)
     .then((url) => {
@@ -65,23 +64,25 @@ const createAttachment = ((req, res, next) => {
 });
 
 const showAttachment = (req, res, next) => {
-  var id = req.query.id
-  Attachment.find({_id: req.swagger.params.id.value})
-    .then((attachment) => {
-      if(attachment.length > 0) {
-        res.status(200).send(_.pick(attachment[0], ['_id', 'name', 's3_url', 'mime_type', 'status', 'created_at', 'updated_at']));
-      }
-      res.status(404).send({ errors: ['No Attachments found with the given Id'] })
-    }).catch((err) => {
-      res.status(400).send({errors: err.toString().replace('MongooseError: ', '').split(',')})
-    })
+  let id = req.swagger.params.id.value;
+  Attachment.find({_id: id}).populate('user', ['_id', 'username', 'email'])
+  .then((attachment) => {
+    if(attachment.length > 0) {
+      res.status(200).send(_.pick(attachment[0], ['_id', 'name', 's3_url', 'mime_type', 'status', 'user', 'created_at', 'updated_at']));
+    }
+    res.status(404).send({ errors: ['No Attachments found with the given Id'] })
+  }).catch((err) => {
+    res.status(400).send({errors: err.toString().replace('MongooseError: ', '').split(',')})
+  })
 };
 
 const removeAttachment = (req, res, next) => {
-  Attachment.findOneAndUpdate({ _id: req.swagger.params.id.value }, { status: 'deleted' }, { new: true })
+  Attachment
+    .findOneAndUpdate({ _id: req.swagger.params.id.value }, { status: 'deleted' }, { new: true })
+    .populate('user', ['_id', 'username', 'email'])
     .then((attachment) => {
       if(attachment) {
-        res.status(200).send(_.pick(attachment, ['_id', 'name', 's3_url', 'mime_type', 'status', 'created_at', 'updated_at']));
+        res.status(200).send(_.pick(attachment, ['_id', 'name', 's3_url', 'mime_type', 'status', 'user', 'created_at', 'updated_at']));
       }
       res.status(404).send({ errors: ['No Attachment found for the given Id'] })
     }).catch((err) => {
@@ -90,11 +91,13 @@ const removeAttachment = (req, res, next) => {
 };
 
 const updateAttachment = (req, res, next) => {
-  Attachment.findOneAndUpdate({ _id: req.swagger.params.id.value }, req.body, { new: true, runValidators: true })
+  Attachment
+    .findOneAndUpdate({ _id: req.swagger.params.id.value }, req.body, { new: true, runValidators: true })
+    .populate('user', ['_id', 'username', 'email'])
     .then((attachment) => {
       console.log('success', attachment);
       if(attachment) {
-        res.status(200).send(_.pick(attachment, ['_id', 'name', 's3_url', 'mime_type', 'status', 'created_at', 'updated_at']));
+        res.status(200).send(_.pick(attachment, ['_id', 'name', 's3_url', 'mime_type', 'status', 'user', 'created_at', 'updated_at']));
       }
       res.status(404).send({ errors: ['No attachment found for the given Id'] })
     }).catch((err) => {

@@ -16,14 +16,12 @@ const thoughtSchema = new mongoose.Schema({
   description: {
     type: String,
     trim: true,
-    // required: [true, 'A thought should have some description.'],
-    // minlength: [5, 'A thought should be atleast 5 characters long']
   },
   title: {
     type: String,
     trim: true,
   },
-  user_id: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -41,24 +39,8 @@ const thoughtSchema = new mongoose.Schema({
     enum: CATEGORY,
     default: 'self'
   },
-  tags: {
-    type: Array,
-    default: []
-  },
-  attachments: {
-    type: Array,
-    default: []
-  },
-  score: {
-    type: mongoose.Schema.Types.Decimal,
-    default: '0.0',
-    set: function(score) {
-      return parseFloat(score).toFixed(1);
-    },
-    get: function(score) {
-      return parseFloat(score).toFixed(1);
-    }
-  }
+  tags: [ {type: mongoose.Schema.Types.ObjectId, ref: 'Tag'} ],
+  attachments: [ {type: mongoose.Schema.Types.ObjectId, ref: 'Attachment'} ]
 });
 
 thoughtSchema.plugin(mongoosePaginate);
