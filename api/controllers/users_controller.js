@@ -37,6 +37,7 @@ const profile = (req, res, next) => {
 };
 
 const signin = (req, res, next) => {
+  console.log('jjjjjjjjjjjj :  ' , req.body)
   const {email, password} = req.body;
   User.findByCredentials(email, password, req)
     .then(({user, token}) => {

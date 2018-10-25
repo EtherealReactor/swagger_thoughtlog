@@ -85,6 +85,7 @@ userSchema.methods.createOrUpdateToken = function(req) {
   var platform = Utilities.platform(req.headers['user-agent'])
   var query = {'api_keys.platform': platform, email: user.email}
   var secret = process.env.SECRET;
+  console.log('jjjjjj :: ', secret)
   var token = jwt.sign({ _id: user._id.toHexString() }, secret).toString();
   var update = { $set: { 'api_keys.$.platform': platform, 'api_keys.$.token': token } };
   // var update = { $push: {api_keys: { platform: platform, token: token}} };
@@ -133,13 +134,15 @@ userSchema.statics.findByToken = function(token) {
 
   try {
     decoded = jwt.verify(token, process.env.SECRET);
+    console.log('user    : ' ,decoded)
   } catch (e) {
+    // console.log()
+    console.log('invaliddd    : ' , process.env.SECRET)
     return Promise.reject()
   }
 
   return User.findOne({
-    _id: decoded._id,
-    'api_keys.token': token
+    _id: decoded._id
   })
 }
 

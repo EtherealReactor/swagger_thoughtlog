@@ -8,6 +8,7 @@ host: localhost:10010
 # basePath prefixes all resource paths
 #basePath: /api
 basePath: /
+
 # tagss
 tags:
 - name: User
@@ -88,7 +89,7 @@ paths:
         - in: body
           name: body
           description: User Signin
-          required: true
+          required: false
           schema:
             $ref: "#/definitions/UserSignin"
       responses:
